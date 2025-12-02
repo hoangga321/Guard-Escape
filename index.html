@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Neon Heist: Guard Escape</title>
+  <link rel="stylesheet" href="css/style.css" type="text/css" />
+</head>
+<body class="hub-page">
+  <video
+    class="bg-video"
+    src="assets/video/poster.mp4"
+    autoplay
+    muted
+    loop
+    playsinline
+  ></video>
+
+  <div class="hub-overlay">
+    <div class="hub">
+      <header class="hub-header">
+        <div class="hub-title-block">
+          <h1 id="hub-title">Neon Heist: Guard Escape</h1>
+          <p class="subtitle" id="hub-subtitle">Stealth puzzle escape prototype</p>
+        </div>
+        <div class="lang-switch" aria-label="Language">
+          <button class="lang-btn active" data-lang="vi" id="lang-vi">VI</button>
+          <button class="lang-btn" data-lang="ko" id="lang-ko">KO</button>
+          <button class="lang-btn" data-lang="en" id="lang-en">EN</button>
+        </div>
+      </header>
+
+      <main class="hub-main">
+        <section class="stages">
+          <div class="grid">
+            <div class="card" id="stage1-card">
+              <div class="card-thumb">
+                <img src="assets/img/thumbnail1.png" alt="Stage 1 - Lab Escape thumbnail">
+              </div>
+              <div class="badge" id="stage1-badge">Stage 1</div>
+              <h2 id="stage1-title">Lab Escape</h2>
+              <p id="stage1-desc">
+                Infiltrate the lab, hack the main console, and slip past the exit guards.
+              </p>
+              <div class="actions">
+                <button id="stage1-btn">Play Stage 1</button>
+              </div>
+            </div>
+
+            <div class="card" id="stage2-card">
+              <div class="card-thumb">
+                <img src="assets/img/thumbnail2.png" alt="Stage 2 - Security Breakout thumbnail">
+              </div>
+              <div class="badge locked" id="stage2-lock">LOCKED</div>
+              <h2 id="stage2-title">Security Breakout</h2>
+              <p id="stage2-desc">
+                High-security wing with tighter patrols and new escape routes.
+              </p>
+              <div class="actions">
+                <button id="stage2-btn" class="locked" disabled>Play Stage 2</button>
+              </div>
+            </div>
+
+            <div class="card" id="stage3-card">
+              <div class="card-thumb">
+                <!-- Temporary thumbnail, you can replace the file later -->
+                <img src="assets/img/thumbnail3.png" alt="Stage 3 - Core Infiltration thumbnail">
+              </div>
+              <div class="badge locked" id="stage3-lock">LOCKED</div>
+              <h2 id="stage3-title">Core Infiltration</h2>
+              <p id="stage3-desc">
+                Dive into the inner core, bypass layered defenses, and escape with the final data.
+              </p>
+              <div class="actions">
+                <button id="stage3-btn" class="locked" disabled>Play Stage 3</button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      // --- Simple language data for the hub only ---
+      const HUB_TEXT = {
+        vi: {
+          title: "Neon Heist: Guard Escape",
+          subtitle: "Prototype game hành động – ẩn nấp",
+          heroTitle: "BẢN DÙNG THỬ NHIỆM VỤ ĐỘT NHẬP",
+          heroText:
+            "Lén lút xâm nhập, điều hướng lại hệ thống an ninh và trốn thoát khỏi cơ sở bảo vệ nghiêm ngặt.",
+          stage1Badge: "Stage 1",
+          stage1Title: "Lab Escape",
+          stage1Desc:
+            "Đột nhập tầng thí nghiệm, hack console chính và lẩn tránh lính gác để ra khỏi cửa thoát.",
+          stage1Button: "Chơi Stage 1",
+          stage2BadgeLocked: "LOCKED",
+          stage2BadgeUnlocked: "UNLOCKED",
+          stage2Title: "Security Breakout",
+          stage2Desc:
+            "Tầng an ninh chính với nhiều tuyến tuần tra và lộ trình trốn thoát phức tạp hơn.",
+          stage2ButtonLocked: "Play Stage 2",
+          stage2ButtonUnlocked: "Chơi Stage 2",
+          stage3BadgeLocked: "LOCKED",
+          stage3BadgeUnlocked: "UNLOCKED",
+          stage3Title: "Core Infiltration",
+          stage3Desc:
+            "Đột nhập vào lõi trung tâm, bẻ khóa lớp bảo vệ cuối cùng và trốn thoát với dữ liệu tối mật.",
+          stage3ButtonLocked: "Play Stage 3",
+          stage3ButtonUnlocked: "Chơi Stage 3"
+        },
+        ko: {
+          title: "Neon Heist: Guard Escape",
+          subtitle: "잠입 액션 스텔스 퍼즐 프로토타입",
+          heroTitle: "침투 · 교란 · 탈출",
+          heroText:
+            "경비병과 감시 카메라가 지키는 하이테크 시설에 침투하고 보안 루트를 재구성하여 탈출하세요.",
+          stage1Badge: "Stage 1",
+          stage1Title: "Lab Escape",
+          stage1Desc:
+            "실험실 층에 잠입해 메인 콘솔을 해킹하고 경비를 피해 탈출구로 이동합니다.",
+          stage1Button: "스테이지 1 시작",
+          stage2BadgeLocked: "LOCKED",
+          stage2BadgeUnlocked: "UNLOCKED",
+          stage2Title: "Security Breakout",
+          stage2Desc:
+            "더 촘촘한 경비와 여러 탈출 루트가 있는 보안 구역 스테이지입니다.",
+          stage2ButtonLocked: "Play Stage 2",
+          stage2ButtonUnlocked: "스테이지 2 시작",
+          stage3BadgeLocked: "LOCKED",
+          stage3BadgeUnlocked: "UNLOCKED",
+          stage3Title: "Core Infiltration",
+          stage3Desc:
+            "연구 시설의 심장부로 침투하여 마지막 보안 층을 돌파하고 데이터를 가지고 탈출하세요.",
+          stage3ButtonLocked: "Play Stage 3",
+          stage3ButtonUnlocked: "스테이지 3 시작"
+        },
+        en: {
+          title: "Neon Heist: Guard Escape",
+          subtitle: "Stealth puzzle escape prototype",
+          heroTitle: "STEALTH HEIST PROTOTYPE",
+          heroText:
+            "Infiltrate, reroute security, and escape from a high–tech facility guarded by patrols and cameras.",
+          stage1Badge: "Stage 1",
+          stage1Title: "Lab Escape",
+          stage1Desc:
+            "Infiltrate the lab, hack the main console, and slip past the exit guards.",
+          stage1Button: "Play Stage 1",
+          stage2BadgeLocked: "LOCKED",
+          stage2BadgeUnlocked: "UNLOCKED",
+          stage2Title: "Security Breakout",
+          stage2Desc:
+            "High-security wing with tighter patrols and new escape routes.",
+          stage2ButtonLocked: "Play Stage 2",
+          stage2ButtonUnlocked: "Play Stage 2",
+          stage3BadgeLocked: "LOCKED",
+          stage3BadgeUnlocked: "UNLOCKED",
+          stage3Title: "Core Infiltration",
+          stage3Desc:
+            "Dive into the inner core, bypass layered defenses, and escape with the final data.",
+          stage3ButtonLocked: "Play Stage 3",
+          stage3ButtonUnlocked: "Play Stage 3"
+        }
+      };
+
+      const titleEl = document.getElementById("hub-title");
+      const subtitleEl = document.getElementById("hub-subtitle");
+      const heroTitleEl = document.getElementById("hero-title");
+      const heroTextEl = document.getElementById("hero-text");
+      const stage1BadgeEl = document.getElementById("stage1-badge");
+      const stage1TitleEl = document.getElementById("stage1-title");
+      const stage1DescEl = document.getElementById("stage1-desc");
+      const stage1BtnEl = document.getElementById("stage1-btn");
+      const stage2LockEl = document.getElementById("stage2-lock");
+      const stage2TitleEl = document.getElementById("stage2-title");
+      const stage2DescEl = document.getElementById("stage2-desc");
+      const stage2BtnEl = document.getElementById("stage2-btn");
+      const stage3LockEl = document.getElementById("stage3-lock");
+      const stage3TitleEl = document.getElementById("stage3-title");
+      const stage3DescEl = document.getElementById("stage3-desc");
+      const stage3BtnEl = document.getElementById("stage3-btn");
+
+      const langButtons = document.querySelectorAll(".lang-btn");
+
+      function isStage2Unlocked() {
+        try {
+          return localStorage.getItem("stage1_cleared") === "true";
+        } catch (e) {
+          return false;
+        }
+      }
+
+      function isStage3Unlocked() {
+        try {
+          return localStorage.getItem("stage2_cleared") === "true";
+        } catch (e) {
+          return false;
+        }
+      }
+
+      function applyLang(lang) {
+        const t = HUB_TEXT[lang] || HUB_TEXT.en;
+        if (titleEl) titleEl.textContent = t.title;
+        if (subtitleEl) subtitleEl.textContent = t.subtitle;
+        if (heroTitleEl) heroTitleEl.textContent = t.heroTitle;
+        if (heroTextEl) heroTextEl.textContent = t.heroText;
+        if (stage1BadgeEl) stage1BadgeEl.textContent = t.stage1Badge;
+        if (stage1TitleEl) stage1TitleEl.textContent = t.stage1Title;
+        if (stage1DescEl) stage1DescEl.textContent = t.stage1Desc;
+        if (stage1BtnEl) stage1BtnEl.textContent = t.stage1Button;
+
+        const stage2Unlocked = isStage2Unlocked();
+        if (stage2LockEl) {
+          stage2LockEl.textContent = stage2Unlocked
+            ? t.stage2BadgeUnlocked
+            : t.stage2BadgeLocked;
+        }
+        if (stage2TitleEl) stage2TitleEl.textContent = t.stage2Title;
+        if (stage2DescEl) stage2DescEl.textContent = t.stage2Desc;
+        if (stage2BtnEl) {
+          stage2BtnEl.textContent = stage2Unlocked
+            ? t.stage2ButtonUnlocked
+            : t.stage2ButtonLocked;
+        }
+
+        const stage3Unlocked = isStage3Unlocked();
+        if (stage3LockEl) {
+          stage3LockEl.textContent = stage3Unlocked
+            ? t.stage3BadgeUnlocked
+            : t.stage3BadgeLocked;
+          stage3LockEl.classList.toggle("locked", !stage3Unlocked);
+        }
+        if (stage3TitleEl) stage3TitleEl.textContent = t.stage3Title;
+        if (stage3DescEl) stage3DescEl.textContent = t.stage3Desc;
+        if (stage3BtnEl) {
+          stage3BtnEl.textContent = stage3Unlocked
+            ? t.stage3ButtonUnlocked
+            : t.stage3ButtonLocked;
+          stage3BtnEl.disabled = !stage3Unlocked;
+          stage3BtnEl.classList.toggle("locked", !stage3Unlocked);
+        }
+
+        langButtons.forEach(function (btn) {
+          btn.classList.toggle("active", btn.dataset.lang === lang);
+        });
+
+        document.documentElement.lang = lang;
+        try {
+          localStorage.setItem("hub_lang", lang);
+        } catch (e) {}
+      }
+
+      // Stage navigation & unlock logic
+      if (stage1BtnEl) {
+        stage1BtnEl.addEventListener("click", function () {
+          window.location.href = "stage1.html";
+        });
+      }
+
+      const stage2Unlocked = isStage2Unlocked();
+      if (stage2Unlocked) {
+        if (stage2LockEl) {
+          stage2LockEl.classList.remove("locked");
+        }
+        if (stage2BtnEl) {
+          stage2BtnEl.classList.remove("locked");
+          stage2BtnEl.disabled = false;
+          stage2BtnEl.addEventListener("click", function () {
+            window.location.href = "stage2.html";
+          });
+        }
+      } else {
+        if (stage2BtnEl) {
+          stage2BtnEl.disabled = true;
+        }
+      }
+
+      const stage3Unlocked = isStage3Unlocked();
+      if (stage3Unlocked) {
+        if (stage3LockEl) {
+          stage3LockEl.classList.remove("locked");
+        }
+        if (stage3BtnEl) {
+          stage3BtnEl.classList.remove("locked");
+          stage3BtnEl.disabled = false;
+          stage3BtnEl.addEventListener("click", function () {
+            window.location.href = "stage3.html";
+          });
+        }
+      } else {
+        if (stage3BtnEl) {
+          stage3BtnEl.disabled = true;
+        }
+      }
+
+      // Language button events
+      langButtons.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          const lang = btn.dataset.lang;
+          applyLang(lang);
+        });
+      });
+
+      // Initial language
+      let initialLang = "en";
+      try {
+        const stored = localStorage.getItem("hub_lang");
+        if (stored && HUB_TEXT[stored]) {
+          initialLang = stored;
+        }
+      } catch (e) {}
+
+      applyLang(initialLang);
+    })();
+  </script>
+</body>
+</html>

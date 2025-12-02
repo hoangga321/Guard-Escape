@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
+  />
+  <title>Neon Heist: Guard Escape</title>
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+  <div id="page-layout">
+    <!-- Sidebar bên trái: để minimap / info sau này -->
+    <div id="side-panel">
+      <div id="side-panel-inner">
+        <!-- Small poster above minimap -->
+        <div id="side-poster-slot">
+          <img src="./assets/img/poster.png" alt="Guard Escape Poster" />
+        </div>
+
+        <!-- Minimap placeholder (kept for JS to replace with canvas) -->
+        <div id="minimap-placeholder">
+          MINIMAP
+        </div>
+
+        <!-- Audio controls below minimap -->
+        <div id="audio-controls">
+          <div id="audio-controls-title">Audio</div>
+          <div class="volume-row">
+            <label for="bgm-volume">BGM</label>
+            <input
+              id="bgm-volume"
+              type="range"
+              min="0"
+              max="100"
+              value="60"
+            />
+          </div>
+          <div class="volume-row">
+            <label for="sfx-volume">SFX</label>
+            <input
+              id="sfx-volume"
+              type="range"
+              min="0"
+              max="100"
+              value="90"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Khung game bên phải (giữ nguyên cấu trúc cũ) -->
+    <div id="game-root">
+      <div id="game-wrapper">
+        <canvas id="game-canvas" width="1280" height="720"></canvas>
+
+        <!-- HUD overlay (minimap, alert bar, gadgets, etc.) -->
+        <div id="hud"></div>
+
+        <!-- Cutscene overlay (letterbox + dialogue box) -->
+        <div id="cutscene-overlay">
+          <div class="letterbox top"></div>
+          <div class="letterbox bottom"></div>
+          <div id="dialogue-box">
+            <div id="dialogue-speaker"></div>
+            <div id="dialogue-text"></div>
+          </div>
+        </div>
+
+        <!-- Video overlay cho opening / ending -->
+        <div id="video-overlay">
+          <video
+            id="video-open1"
+            class="cutscene-video"
+            src="./assets/video/open1.mp4"
+            preload="auto"
+          ></video>
+          <video
+            id="video-end1"
+            class="cutscene-video"
+            src="./assets/video/end1.mp4"
+            preload="auto"
+          ></video>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts: order matters (globals, then main) -->
+  <script src="./js/config.js"></script>
+  <script src="./js/state_manager.js"></script>
+  <script src="./js/input.js"></script>
+  <script src="./js/renderer.js"></script>
+  <script src="./js/level.js"></script>
+  <script src="./js/player.js"></script>
+  <script src="./js/guard.js"></script>
+  <script src="./js/stealth.js"></script>
+  <script src="./js/lang.js"></script>
+  <script src="./js/ui.js"></script>
+  <script src="./js/tutorial.js"></script>
+  <script src="./js/audio.js"></script>
+  <script src="./js/main_stage1.js"></script>
+
+  <a href="index.html" style="position:fixed; left:8px; bottom:8px; font-size:11px; opacity:0.5; color:#aaa; text-decoration:none;">
+    &larr; Back to Hub
+  </a>
+</body>
+</html>
