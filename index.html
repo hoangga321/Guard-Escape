@@ -5,6 +5,47 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Neon Heist: Guard Escape</title>
   <link rel="stylesheet" href="css/style.css" type="text/css" />
+  <style>
+    .howto-popup {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+    .howto-popup.hidden { display: none; }
+    .howto-popup-content {
+      background: rgba(20,20,30,0.95);
+      padding: 24px;
+      border-radius: 10px;
+      width: 420px;
+      max-width: 90%;
+      color: #fff;
+    }
+    .howto-close-btn {
+      float: right;
+      border: none;
+      background: transparent;
+      color: #fff;
+      font-size: 28px;
+      cursor: pointer;
+    }
+    .howto-open-btn {
+      margin-left: 8px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid #999;
+      background: rgba(0, 0, 0, 0.4);
+      color: #fff;
+      cursor: pointer;
+    }
+    .howto-open-btn:hover {
+      background: rgba(255,255,255,0.1);
+    }
+  </style>
 </head>
 <body class="hub-page">
   <video
@@ -27,6 +68,7 @@
           <button class="lang-btn active" data-lang="vi" id="lang-vi">VI</button>
           <button class="lang-btn" data-lang="ko" id="lang-ko">KO</button>
           <button class="lang-btn" data-lang="en" id="lang-en">EN</button>
+          <button id="howto-open" class="howto-open-btn">HOW TO PLAY</button>
         </div>
       </header>
 
@@ -81,6 +123,24 @@
     </div>
   </div>
 
+  <div id="howto-popup" class="howto-popup hidden">
+    <div class="howto-popup-content">
+      <button id="howto-close" class="howto-close-btn">×</button>
+
+      <h2 id="howto-title"></h2>
+      <p id="howto-intro"></p>
+
+      <ul>
+        <li id="howto-move"></li>
+        <li id="howto-run"></li>
+        <li id="howto-interact"></li>
+        <li id="howto-decoy"></li>
+        <li id="howto-alert"></li>
+        <li id="howto-mission"></li>
+      </ul>
+    </div>
+  </div>
+
   <script>
     (function () {
       // --- Simple language data for the hub only ---
@@ -109,7 +169,15 @@
           stage3Desc:
             "Đột nhập vào lõi trung tâm, bẻ khóa lớp bảo vệ cuối cùng và trốn thoát với dữ liệu tối mật.",
           stage3ButtonLocked: "Play Stage 3",
-          stage3ButtonUnlocked: "Chơi Stage 3"
+          stage3ButtonUnlocked: "Chơi Stage 3",
+          howtoTitle: "Cách chơi",
+          howtoIntro: "Tất cả màn chơi đều dùng chung một bộ điều khiển và quy tắc ẩn nấp.",
+          howtoMove: "Di chuyển: phím mũi tên hoặc WASD.",
+          howtoRun: "Chạy: giữ phím Shift khi di chuyển (tạo nhiều tiếng động và dễ bị phát hiện hơn).",
+          howtoInteract: "Tương tác: phím E – dùng để hack console, bật/tắt công tắc, mở cửa.",
+          howtoDecoy: "Mồi nhử: phím F – tạo tiếng động để dụ lính gác quay đầu (tùy màn).",
+          howtoAlert: "Thanh cảnh báo: khi đầy, kẻ địch chuyển sang trạng thái truy đuổi. Tránh đứng trong vùng hình nón tầm nhìn.",
+          howtoMission: "Mục tiêu chung: hack các console quan trọng, vô hiệu đủ bẫy và thoát qua cổng EXIT để hoàn thành màn."
         },
         ko: {
           title: "Neon Heist: Guard Escape",
@@ -135,7 +203,15 @@
           stage3Desc:
             "연구 시설의 심장부로 침투하여 마지막 보안 층을 돌파하고 데이터를 가지고 탈출하세요.",
           stage3ButtonLocked: "Play Stage 3",
-          stage3ButtonUnlocked: "스테이지 3 시작"
+          stage3ButtonUnlocked: "스테이지 3 시작",
+          howtoTitle: "플레이 방법",
+          howtoIntro: "모든 스테이지는 같은 조작과 잠입 규칙을 사용합니다.",
+          howtoMove: "이동: 방향키 또는 WASD.",
+          howtoRun: "달리기: 이동하면서 Shift 키를 누른 상태로 유지합니다. (소음이 커지고 발각 위험이 증가합니다.)",
+          howtoInteract: "상호작용: E 키 – 콘솔 해킹, 스위치 조작, 문 열기 등에 사용합니다.",
+          howtoDecoy: "미끼 장치: F 키 – 소리를 내서 경비의 시선을 다른 곳으로 돌립니다(스테이지에 따라 제공).",
+          howtoAlert: "경계 게이지: 빨간 바가 가득 차면 적이 완전 추격 모드로 전환됩니다. 시야 콘 안에 오래 머무르지 마세요.",
+          howtoMission: "기본 목표: 주요 콘솔을 해킹하고 함정을 충분히 비활성화한 뒤 EXIT 게이트까지 도달하면 스테이지를 클리어할 수 있습니다."
         },
         en: {
           title: "Neon Heist: Guard Escape",
@@ -161,7 +237,15 @@
           stage3Desc:
             "Dive into the inner core, bypass layered defenses, and escape with the final data.",
           stage3ButtonLocked: "Play Stage 3",
-          stage3ButtonUnlocked: "Play Stage 3"
+          stage3ButtonUnlocked: "Play Stage 3",
+          howtoTitle: "How to Play",
+          howtoIntro: "All stages share the same basic controls and stealth rules.",
+          howtoMove: "Move: Arrow keys or WASD.",
+          howtoRun: "Run: Hold Shift while moving (louder and easier to detect).",
+          howtoInteract: "Interact: E key – hack consoles, flip switches, open doors.",
+          howtoDecoy: "Decoy: F key – drop a noise decoy to lure guards (available in some stages).",
+          howtoAlert: "Alert level: when the red bar fills, enemies enter full chase mode. Avoid staying inside their vision cones.",
+          howtoMission: "Main objective: hack key consoles, disable enough traps, then reach the EXIT gate to clear the stage."
         }
       };
 
@@ -181,6 +265,17 @@
       const stage3TitleEl = document.getElementById("stage3-title");
       const stage3DescEl = document.getElementById("stage3-desc");
       const stage3BtnEl = document.getElementById("stage3-btn");
+      const howtoOpenBtn = document.getElementById("howto-open");
+      const howtoPopup = document.getElementById("howto-popup");
+      const howtoCloseBtn = document.getElementById("howto-close");
+      const howtoTitleEl = document.getElementById("howto-title");
+      const howtoIntroEl = document.getElementById("howto-intro");
+      const howtoMoveEl = document.getElementById("howto-move");
+      const howtoRunEl = document.getElementById("howto-run");
+      const howtoInteractEl = document.getElementById("howto-interact");
+      const howtoDecoyEl = document.getElementById("howto-decoy");
+      const howtoAlertEl = document.getElementById("howto-alert");
+      const howtoMissionEl = document.getElementById("howto-mission");
 
       const langButtons = document.querySelectorAll(".lang-btn");
 
@@ -241,6 +336,15 @@
           stage3BtnEl.disabled = !stage3Unlocked;
           stage3BtnEl.classList.toggle("locked", !stage3Unlocked);
         }
+
+        if (howtoTitleEl) howtoTitleEl.textContent = t.howtoTitle;
+        if (howtoIntroEl) howtoIntroEl.textContent = t.howtoIntro;
+        if (howtoMoveEl) howtoMoveEl.textContent = t.howtoMove;
+        if (howtoRunEl) howtoRunEl.textContent = t.howtoRun;
+        if (howtoInteractEl) howtoInteractEl.textContent = t.howtoInteract;
+        if (howtoDecoyEl) howtoDecoyEl.textContent = t.howtoDecoy;
+        if (howtoAlertEl) howtoAlertEl.textContent = t.howtoAlert;
+        if (howtoMissionEl) howtoMissionEl.textContent = t.howtoMission;
 
         langButtons.forEach(function (btn) {
           btn.classList.toggle("active", btn.dataset.lang === lang);
@@ -303,8 +407,32 @@
         });
       });
 
+      if (howtoOpenBtn) {
+        howtoOpenBtn.addEventListener("click", function () {
+          if (howtoPopup) {
+            howtoPopup.classList.remove("hidden");
+          }
+        });
+      }
+
+      if (howtoCloseBtn) {
+        howtoCloseBtn.addEventListener("click", function () {
+          if (howtoPopup) {
+            howtoPopup.classList.add("hidden");
+          }
+        });
+      }
+
+      if (howtoPopup) {
+        howtoPopup.addEventListener("click", function (e) {
+          if (e.target === howtoPopup) {
+            howtoPopup.classList.add("hidden");
+          }
+        });
+      }
+
       // Initial language
-      let initialLang = "en";
+      let initialLang = "ko";
       try {
         const stored = localStorage.getItem("hub_lang");
         if (stored && HUB_TEXT[stored]) {

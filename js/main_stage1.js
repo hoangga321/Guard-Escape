@@ -62,8 +62,8 @@ var AssetImages = {};
 // Chỉ hiện intro 1 lần
 var hasShownIntro = false;
 
-// ===== DEBUG FLAGS =====
-var DEBUG_STEALTH = true;   // toggle this để bật/tắt debug stealth toàn cục
+// Stealth debug disabled in release build
+var DEBUG_STEALTH = false;
 
 // ===== Key state riêng cho main (dùng cho phím E) =====
 var keyState = {};
@@ -244,12 +244,10 @@ function loadImages(manifest, callback) {
       AssetImages[item.key] = img;
       loaded++;
       if (loaded === total) {
-        console.log("[Assets] All images loaded");
         callback();
       }
     };
     img.onerror = function () {
-      console.warn("[Assets] Failed to load image:", item.src);
       loaded++;
       if (loaded === total) {
         callback();
@@ -456,6 +454,21 @@ function restartLevel() {
     { x: TILE_SIZE * 25, y: TILE_SIZE * 10 }
   ];
   guards.push(new Guard(g3Route[0].x, g3Route[0].y, g3Route));
+  // Guard C – Zone B (left): vertical patrol
+  var gCRoute = [
+    { x: TILE_SIZE * 2, y: TILE_SIZE * 10 },
+    { x: TILE_SIZE * 14, y: TILE_SIZE *10 },
+    { x: TILE_SIZE * 2, y: TILE_SIZE * 10 }
+  ];
+  guards.push(new Guard(gCRoute[0].x, gCRoute[0].y, gCRoute));
+
+  var gDRoute = [
+    { x: TILE_SIZE * 30, y: TILE_SIZE * 20 },
+    { x: TILE_SIZE * 36, y: TILE_SIZE *20 },
+    { x: TILE_SIZE * 30, y: TILE_SIZE * 20 }
+  ];
+  guards.push(new Guard(gDRoute[0].x, gDRoute[0].y, gDRoute));
+
 
   // ===== Mutant guard – phòng thí nghiệm thất bại =====
   // Dùng lại class Guard, chỉ khác isMutant = true và không có route (đứng một chỗ cho tới khi thấy player)
@@ -464,14 +477,6 @@ function restartLevel() {
     var mutant = new Guard(ms.x, ms.y, []);
     mutant.isMutant = true;
     guards.push(mutant);
-  }
-
-  // Truyền debug flag xuống subsystems
-  if (typeof Stealth !== "undefined") {
-    Stealth.debug = DEBUG_STEALTH;
-  }
-  if (typeof DEBUG_GUARD !== "undefined") {
-    DEBUG_GUARD = DEBUG_STEALTH;
   }
 
   // Reset timer & mission
@@ -1018,7 +1023,6 @@ function gameLoop(timestamp) {
         Stealth.drawDebug(gameContext);
       }
     } catch (e) {
-      console.warn("Stealth.drawDebug error", e);
     }
   }
 

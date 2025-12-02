@@ -30,6 +30,15 @@ var laserCinematic = {
   duration: 1.4 // seconds for camera pan + fade
 };
 
+// Cinematic for briefly focusing on recently disabled trap groups
+var trapFocusCinematic = {
+  active: false,
+  timer: 0,
+  duration: 1.0, // seconds for camera pan
+  targetX: 0,
+  targetY: 0
+};
+
 // Hint state for the laser switch
 var laserHintShown = false;
 
@@ -113,8 +122,8 @@ var AssetImages = {};
 // Chỉ hiện intro 1 lần
 var hasShownIntro = false;
 
-// ===== DEBUG FLAGS =====
-var DEBUG_STEALTH = true;   // toggle this để bật/tắt debug stealth toàn cục
+// Stealth debug disabled in release build
+var DEBUG_STEALTH = false;
 
 // ===== Key state riêng cho main (dùng cho phím E) =====
 var keyState = {};
@@ -290,12 +299,10 @@ function loadImages(manifest, callback) {
       AssetImages[item.key] = img;
       loaded++;
       if (loaded === total) {
-        console.log("[Assets] All images loaded");
         callback();
       }
     };
     img.onerror = function () {
-      console.warn("[Assets] Failed to load image:", item.src);
       loaded++;
       if (loaded === total) {
         callback();
@@ -470,10 +477,10 @@ function restartLevel() {
     },
     {
       id: "exit",
-      spriteKey: "s3_laser_switch",
+      spriteKey: "s3_console_main",
       clueKey: "stage1_clue_mutant_tank",
-      x: TILE_SIZE * 60,
-      y: TILE_SIZE * 18,
+      x: TILE_SIZE * 34,
+      y: TILE_SIZE * 21,
       width: TILE_SIZE * 2,
       height: TILE_SIZE * 2
     }
@@ -711,60 +718,74 @@ function restartLevel() {
       C: { id: "C", name: "Exit traps",           active: true }
     };
 
+    function worldFromTile(tx, ty) {
+      return {
+        x: TILE_SIZE * tx,
+        y: TILE_SIZE * ty
+      };
+    }
+
     var switches = [];
 
-    function makeSwitchFromConsole(consoleId, switchId, groupIds) {
-      if (!currentLevel.securityConsoles) return;
-      var c = null;
-      for (var i = 0; i < currentLevel.securityConsoles.length; i++) {
-        if (currentLevel.securityConsoles[i].id === consoleId) {
-          c = currentLevel.securityConsoles[i];
-          break;
-        }
-      }
-      if (!c) return;
-
+    (function createSwitchA() {
+      var pos = worldFromTile(12, 27);
       switches.push({
-        id: switchId,
-        consoleId: consoleId,
-        groupIds: groupIds,
-        x: c.x,
-        y: c.y,
-        width: c.width,
-        height: c.height,
-        used: false
+        id: "switchA",
+        consoleId: "corridor",
+        groupIds: ["A"],
+        x: pos.x,
+        y: pos.y,
+        width: TILE_SIZE * 2,
+        height: TILE_SIZE * 2,
+        spriteKey: "s3_laser_switch",
+        active: true,
+        pressed: false,
+        animTime: 0,
+        used: false,
+        justToggled: false
       });
-    }
+      addProp("s3_laser_switch", 12, 27, 2, 2);
+    })();
 
-    makeSwitchFromConsole("corridor", "switchA", ["A"]);
-    makeSwitchFromConsole("main",     "switchB", ["B"]);
-    makeSwitchFromConsole("exit",     "switchC", ["C"]);
+    (function createSwitchB() {
+      var pos = worldFromTile(38, 19);
+      switches.push({
+        id: "switchB",
+        consoleId: "main",
+        groupIds: ["B"],
+        x: pos.x,
+        y: pos.y,
+        width: TILE_SIZE * 2,
+        height: TILE_SIZE * 2,
+        spriteKey: "s3_laser_switch",
+        active: true,
+        pressed: false,
+        animTime: 0,
+        used: false,
+        justToggled: false
+      });
+      addProp("s3_laser_switch", 38, 19, 2, 2);
+    })();
 
-    var switchTilePositions = {
-      switchA: { tileX: 12, tileY: 27 },
-      switchB: { tileX: 38, tileY: 19 },
-      switchC: { tileX: 51, tileY: 19 }
-    };
-
-    for (var s = 0; s < switches.length; s++) {
-      var sw = switches[s];
-      if (!sw) continue;
-      var pos = switchTilePositions[sw.id];
-      if (!pos) continue;
-
-      sw.x = TILE_SIZE * pos.tileX;
-      sw.y = TILE_SIZE * pos.tileY;
-      sw.width = TILE_SIZE * 2;
-      sw.height = TILE_SIZE * 2;
-
-      addProp(
-        "s3_laser_switch",
-        pos.tileX,
-        pos.tileY,
-        2,
-        2
-      );
-    }
+    (function createSwitchC() {
+      var pos = worldFromTile(51, 19);
+      switches.push({
+        id: "switchC",
+        consoleId: "exit",
+        groupIds: ["C"],
+        x: pos.x,
+        y: pos.y,
+        width: TILE_SIZE * 2,
+        height: TILE_SIZE * 2,
+        spriteKey: "s3_laser_switch",
+        active: true,
+        pressed: false,
+        animTime: 0,
+        used: false,
+        justToggled: false
+      });
+      addProp("s3_laser_switch", 51, 19, 2, 2);
+    })();
 
     currentLevel.laserSwitches = switches;
 
@@ -876,21 +897,25 @@ function restartLevel() {
   guards.push(new Guard(gC1Route[0].x, gC1Route[0].y, gC1Route));
   // // Guard C2 – Lower right corridor: patrol below the exit corridor
   var gC2Route = [
-    { x: TILE_SIZE * 60, y: TILE_SIZE * 31 },
+    { x: TILE_SIZE * 6, y: TILE_SIZE * 25 },
+    { x: TILE_SIZE * 17, y: TILE_SIZE * 25 },
+    { x: TILE_SIZE * 6, y: TILE_SIZE * 25 }
+  ];
+  guards.push(new Guard(gC2Route[0].x, gC2Route[0].y, gC2Route));
+  // Guard 
+  var gC3Route = [
+      { x: TILE_SIZE * 60, y: TILE_SIZE * 31 },
     { x: TILE_SIZE * 40, y: TILE_SIZE * 31 },
     { x: TILE_SIZE * 40, y: TILE_SIZE * 38 },
     { x: TILE_SIZE * 60, y: TILE_SIZE * 38 }
   ];
-  guards.push(new Guard(gC2Route[0].x, gC2Route[0].y, gC2Route));
+  guards.push(new Guard(gC3Route[0].x, gC3Route[0].y, gC3Route));
 
-
-  // Truyền debug flag xuống subsystems
-  if (typeof Stealth !== "undefined") {
-    Stealth.debug = DEBUG_STEALTH;
-  }
-  if (typeof DEBUG_GUARD !== "undefined") {
-    DEBUG_GUARD = DEBUG_STEALTH;
-  }
+  // === Mutant guard in console room (Stage 3) ===
+  // NOTE: keep this inside the Stage 3 setup function, after other guards are created.
+  var mutantConsoleGuard = new Guard(TILE_SIZE * 35, TILE_SIZE * 20, []);
+  mutantConsoleGuard.isMutant = true;  // important: enables mutant sleep/zzz behavior
+  guards.push(mutantConsoleGuard);
 
   // Reset timer & mission
   elapsedTime = 0;
@@ -931,6 +956,15 @@ function setLaserGroupActive(level, groupId, active) {
       if (!p || !p.groupId) continue;
       if (p.groupId === groupId) {
         p.active = active;
+
+        // For Stage 3 traps with separate ON/OFF frames, swap the sprite to match active state
+        if (p.trapType === "gate" || p.trapType === "spikes") {
+          if (active === false && p.offSpriteKey) {
+            p.spriteKey = p.offSpriteKey;
+          } else if (active === true && p.onSpriteKey) {
+            p.spriteKey = p.onSpriteKey;
+          }
+        }
       }
     }
   }
@@ -957,6 +991,52 @@ function disableTrapGroup(level, groupId) {
       }
     }
   }
+}
+
+function computeTrapGroupCenter(level, groupIds) {
+  if (!level || !Array.isArray(level.securityProps) || !groupIds || !groupIds.length) {
+    return null;
+  }
+
+  var minX = Infinity;
+  var minY = Infinity;
+  var maxX = -Infinity;
+  var maxY = -Infinity;
+  var found = false;
+
+  for (var i = 0; i < level.securityProps.length; i++) {
+    var p = level.securityProps[i];
+    if (!p || !p.groupId) continue;
+
+    var inGroup = false;
+    for (var g = 0; g < groupIds.length; g++) {
+      if (p.groupId === groupIds[g]) {
+        inGroup = true;
+        break;
+      }
+    }
+    if (!inGroup) continue;
+
+    var x1 = p.x;
+    var y1 = p.y;
+    var x2 = p.x + p.width;
+    var y2 = p.y + p.height;
+
+    if (x1 < minX) minX = x1;
+    if (y1 < minY) minY = y1;
+    if (x2 > maxX) maxX = x2;
+    if (y2 > maxY) maxY = y2;
+    found = true;
+  }
+
+  if (!found) {
+    return null;
+  }
+
+  return {
+    x: (minX + maxX) * 0.5,
+    y: (minY + maxY) * 0.5
+  };
 }
 
 function updateStage3LaserSwitches(dt, justPressedE) {
@@ -986,7 +1066,7 @@ function updateStage3LaserSwitches(dt, justPressedE) {
 
   if (hoveredSwitch) {
     if (typeof UI !== "undefined" && UI && typeof UI.showInteractionHint === "function") {
-      UI.showInteractionHint("stage1_laser_hint");
+      UI.showInteractionHint("stage3_laser_hint");
     }
   } else {
     if (typeof UI !== "undefined" && UI && typeof UI.clearInteractionHint === "function") {
@@ -1019,6 +1099,18 @@ function updateStage3LaserSwitches(dt, justPressedE) {
 
   hoveredSwitch.used = true;
 
+  // Start a short camera pan towards the disabled trap group(s), except for switchC which uses the exit cinematic
+  if (hoveredSwitch.id !== "switchC") {
+    var focusPoint = computeTrapGroupCenter(currentLevel, hoveredSwitch.groupIds || []);
+    if (focusPoint) {
+      trapFocusCinematic.active = true;
+      trapFocusCinematic.timer = 0;
+      trapFocusCinematic.duration = 1.0;
+      trapFocusCinematic.targetX = focusPoint.x;
+      trapFocusCinematic.targetY = focusPoint.y;
+    }
+  }
+
   if (typeof AudioManager !== "undefined" && AudioManager && typeof AudioManager.playSfx === "function") {
     AudioManager.playSfx("laser_off");
   }
@@ -1031,7 +1123,7 @@ function updateStage3LaserSwitches(dt, justPressedE) {
       currentLevel.laserAlpha = 1;
 
       if (typeof UI !== "undefined" && UI && typeof UI.showDialog === "function") {
-        UI.showDialog("stage2_laser_off", "tutorial_hint");
+        UI.showDialog("stage3_laser_off", "tutorial_hint");
         setTimeout(function () {
           if (typeof UI !== "undefined" && UI && typeof UI.hideDialog === "function") {
             UI.hideDialog();
@@ -1092,6 +1184,14 @@ function updateStage3TrapSwitches(dt, justPressedE) {
       currentLevel.laserEnabled = false;
       currentLevel.laserAlpha = 0;
       laserCinematic.active = false;
+      if (typeof UI !== "undefined" && UI && typeof UI.showDialog === "function") {
+        UI.showDialog("stage3_laser_off", "tutorial_hint");
+        setTimeout(function () {
+          if (typeof UI !== "undefined" && UI && typeof UI.hideDialog === "function") {
+            UI.hideDialog();
+          }
+        }, 2000);
+      }
     }
 
     if (typeof AudioManager !== "undefined" && AudioManager && typeof AudioManager.playSfx === "function") {
@@ -1671,11 +1771,8 @@ function gameLoop(timestamp) {
       // Check for clues near lab devices when player presses E
       updateClues(dt, justPressedE);
       // Player can disable traps / laser by pressing E near switches
-      if (currentLevel && currentLevel.stageId === 3) {
-        updateStage3TrapSwitches(dt, justPressedE);
-      } else {
-        updateLaserSwitch(dt, justPressedE);
-      }
+      updateLaserSwitch(dt, justPressedE);
+      updateStage3TrapSwitches(dt, justPressedE);
       updateStage3Traps(dt);
       updateLaserSwitchHint(dt);
       handleStage2SecurityModeToggle(justPressedE);
@@ -1814,7 +1911,7 @@ function gameLoop(timestamp) {
       if (typeof Renderer.setCameraMode === "function") {
         Renderer.setCameraMode("intro");
       }
-      if (typeof Renderer.setCameraTarget === "function") {
+      if (typeof Renderer.setCameraTarget === "function" && currentLevel.exit) {
         var ex = currentLevel.exit;
         var cx = ex.x + ex.width / 2;
         var cy = ex.y + ex.height / 2;
@@ -1829,6 +1926,29 @@ function gameLoop(timestamp) {
       currentLevel.laserAlpha = 0;
 
       if (typeof Renderer !== "undefined" && Renderer && typeof Renderer.setCameraMode === "function") {
+        Renderer.setCameraMode("follow");
+      }
+    }
+  } else if (trapFocusCinematic.active) {
+    // Generic trap-focus cinematic: pan to the last disabled trap group
+    trapFocusCinematic.timer += dt;
+    var tf = trapFocusCinematic.timer / trapFocusCinematic.duration;
+    if (tf > 1) tf = 1;
+
+    if (typeof Renderer !== "undefined" && Renderer) {
+      if (typeof Renderer.setCameraMode === "function") {
+        Renderer.setCameraMode("intro");
+      }
+      if (typeof Renderer.setCameraTarget === "function") {
+        Renderer.setCameraTarget(trapFocusCinematic.targetX, trapFocusCinematic.targetY);
+      }
+    }
+
+    if (tf >= 1) {
+      trapFocusCinematic.active = false;
+
+      // Return camera to follow mode only if no other cinematic is active
+      if (!laserCinematic.active && typeof Renderer !== "undefined" && Renderer && typeof Renderer.setCameraMode === "function") {
         Renderer.setCameraMode("follow");
       }
     }
@@ -1859,7 +1979,6 @@ function gameLoop(timestamp) {
         Stealth.drawDebug(gameContext, currentLevel);
       }
     } catch (e) {
-      console.warn("Stealth.drawDebug error", e);
     }
   }
 
@@ -1891,7 +2010,7 @@ function gameLoop(timestamp) {
   window.requestAnimationFrame(gameLoop);
 }
 
-function startStage2Intro() {
+function startStage3Intro() {
   if (typeof StateManager !== "undefined" && StateManager && typeof StateManager.setState === "function") {
     StateManager.setState("intro");
   } else {
@@ -1901,10 +2020,15 @@ function startStage2Intro() {
   var step = 0;
 
   function advanceIntro() {
-    if (step === 0) {
-      step = 1;
+    step++;
+
+    if (step === 1) {
       if (typeof UI !== "undefined" && UI && typeof UI.showDialog === "function") {
-        UI.showDialog("stage2_goal", "tutorial_hint");
+        UI.showDialog("stage3_goal", "tutorial_hint");
+      }
+    } else if (step === 2) {
+      if (typeof UI !== "undefined" && UI && typeof UI.showDialog === "function") {
+        UI.showDialog("stage3_traps", "tutorial_hint");
       }
     } else {
       if (typeof UI !== "undefined" && UI && typeof UI.hideDialog === "function") {
@@ -1927,7 +2051,7 @@ function startStage2Intro() {
   window.addEventListener("keydown", introKeyHandler);
 
   if (typeof UI !== "undefined" && UI && typeof UI.showDialog === "function") {
-    UI.showDialog("stage2_story", "tutorial_hint");
+    UI.showDialog("stage3_story", "tutorial_hint");
   }
 }
 
@@ -2028,8 +2152,8 @@ window.addEventListener("load", function () {
       window.addEventListener("mousedown", onFirstUserInput);
 
       if (showIntro) {
-        if (typeof startStage2Intro === "function") {
-          startStage2Intro();
+        if (typeof startStage3Intro === "function") {
+          startStage3Intro();
         }
       } else {
         if (
