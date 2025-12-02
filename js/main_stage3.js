@@ -185,6 +185,7 @@ function playOpeningVideo(onDone) {
   var overlay = document.getElementById("video-overlay");
   var openVideo = document.getElementById("video-open2");
   var endVideo = document.getElementById("video-end1");
+  var skipBtn = document.getElementById("video-skip");
 
   // Nếu không có video → bỏ qua
   if (!overlay || !openVideo) {
@@ -203,6 +204,10 @@ function playOpeningVideo(onDone) {
   openVideo.style.display = "block";
   openVideo.currentTime = 0;
 
+  if (skipBtn) {
+    skipBtn.style.display = "block";
+  }
+
   var finished = false;
 
   function cleanup() {
@@ -211,6 +216,12 @@ function playOpeningVideo(onDone) {
 
     openVideo.pause();
     openVideo.removeEventListener("ended", handleEnd);
+
+    if (skipBtn) {
+      skipBtn.removeEventListener("click", handleSkip);
+      skipBtn.style.display = "none";
+    }
+
     openVideo.style.display = "none";
     overlay.style.display = "none";
 
@@ -223,7 +234,15 @@ function playOpeningVideo(onDone) {
     cleanup();
   }
 
+  function handleSkip() {
+    cleanup();
+  }
+
   openVideo.addEventListener("ended", handleEnd);
+
+  if (skipBtn) {
+    skipBtn.addEventListener("click", handleSkip);
+  }
 
   // Autoplay có thể bị chặn → nếu lỗi thì skip luôn
   var playPromise = openVideo.play();

@@ -279,6 +279,25 @@ body {
   display: none;                  /* chỉ bật video đang chạy */
 }
 
+/* Skip button for opening video */
+#video-overlay .video-skip-btn {
+  position: absolute;
+  top: 16px;
+  right: 24px;
+  padding: 6px 12px;
+  font-size: 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  background: rgba(0, 0, 0, 0.6);
+  color: #ffffff;
+  cursor: pointer;
+  z-index: 41;              /* above the video */
+}
+
+#video-overlay .video-skip-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
 /* Alert bar basic style (will be filled by JS later) */
 
 #alert-bar {
