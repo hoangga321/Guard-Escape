@@ -341,42 +341,23 @@ Guard.prototype.update = function (dt, level) {
 
   this._setAnimState(moveDist > 0.01 ? "walk" : "idle", dt);
 
-  // Tính xem player có đang ở trong phạm vi nghe tiếng chân guard hay không
-  var canHear = false;
-  if (typeof player !== "undefined" && player) {
-    var dxp = this.x - player.x;
-    var dyp = this.y - player.y;
-    var distToPlayer = Math.sqrt(dxp * dxp + dyp * dyp);
-
-    var HEAR_DIST;
-    if (typeof TILE_SIZE === "number" && TILE_SIZE > 0) {
-      // chỉ nghe khi guard ở tương đối gần
-      HEAR_DIST = TILE_SIZE * 10;
-    } else {
-      HEAR_DIST = 200;
-    }
-
-    if (distToPlayer <= HEAR_DIST) {
-      canHear = true;
-    }
+  // === Footstep SFX ===
+  if (this.stepInterval == null) {
+    this.stepInterval = 0.40;
   }
 
-  // Stage 2: on the bright security floor, always allow hearing footsteps when guard is moving
-  if (
-    typeof currentLevel !== "undefined" &&
-    currentLevel &&
-    currentLevel.stageId === 2
-  ) {
-    canHear = true;
-  }
+  var guardMoving = (moveDist > 0.1);
+  var isChasingOrKnocked = (
+    this.state === "CHASE" ||
+    this.state === "chasing" ||
+    this.state === "knocked"
+  );
 
-  // Tiếng bước chân guard: chỉ phát khi guard đang đi
-  // VÀ player ở trong phạm vi nghe được
-  if (moveDist > 0.1 && canHear) {
+  if (guardMoving && !isChasingOrKnocked) {
     this.stepTimer += dt;
-    var STEP_INTERVAL = 0.30; // bước chậm hơn player một chút
-
-    if (this.stepTimer >= STEP_INTERVAL) {
+    if (this.stepTimer >= this.stepInterval) {
+      this.stepTimer = 0;
+      // Always play guard step when guard is walking (any stage)
       if (
         typeof AudioManager !== "undefined" &&
         AudioManager &&
@@ -384,19 +365,9 @@ Guard.prototype.update = function (dt, level) {
       ) {
         AudioManager.playSfx("guard_step");
       }
-
-      this.stepTimer -= STEP_INTERVAL;
     }
   } else {
-    // không di chuyển hoặc player đã ra khỏi phạm vi nghe → tắt tiếng bước chân
     this.stepTimer = 0;
-    if (
-      typeof AudioManager !== "undefined" &&
-      AudioManager &&
-      typeof AudioManager.stopSfx === "function"
-    ) {
-      AudioManager.stopSfx("guard_step");
-    }
   }
 
   this.lastX = this.x;

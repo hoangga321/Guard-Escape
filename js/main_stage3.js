@@ -455,6 +455,9 @@ function restartLevel() {
     currentLevel.stageId = 3;
     currentLevel.theme = "core";
     currentLevel.useFog = false;
+
+    // Make sure the laser-off intro message can be shown once per restart
+    currentLevel.laserOffIntroShown = false;
   }
 
   // Override player spawn to a safe spot in Zone A (away from cameras/guards)
@@ -1141,13 +1144,29 @@ function updateStage3LaserSwitches(dt, justPressedE) {
       currentLevel.laserEnabled = true;
       currentLevel.laserAlpha = 1;
 
-      if (typeof UI !== "undefined" && UI && typeof UI.showDialog === "function") {
+      // Show intro-style message when the special Stage 3 switch disables the exit lasers
+      if (
+        typeof UI !== "undefined" &&
+        UI &&
+        typeof UI.showDialog === "function"
+      ) {
+        // Optionally hide any previous dialog
+        if (typeof UI.hideDialog === "function") {
+          UI.hideDialog();
+        }
+
         UI.showDialog("stage3_laser_off", "tutorial_hint");
+
+        // Auto-hide after 2.5 seconds
         setTimeout(function () {
-          if (typeof UI !== "undefined" && UI && typeof UI.hideDialog === "function") {
+          if (
+            typeof UI !== "undefined" &&
+            UI &&
+            typeof UI.hideDialog === "function"
+          ) {
             UI.hideDialog();
           }
-        }, 2000);
+        }, 2500);
       }
     }
   }
@@ -1203,18 +1222,37 @@ function updateStage3TrapSwitches(dt, justPressedE) {
       currentLevel.laserEnabled = false;
       currentLevel.laserAlpha = 0;
       laserCinematic.active = false;
-      if (typeof UI !== "undefined" && UI && typeof UI.showDialog === "function") {
-        UI.showDialog("stage3_laser_off", "tutorial_hint");
-        setTimeout(function () {
-          if (typeof UI !== "undefined" && UI && typeof UI.hideDialog === "function") {
-            UI.hideDialog();
-          }
-        }, 2000);
-      }
     }
 
     if (typeof AudioManager !== "undefined" && AudioManager && typeof AudioManager.playSfx === "function") {
       AudioManager.playSfx("laser_off");
+    }
+
+    if (c.id === "exit") {
+      if (
+        !currentLevel.laserOffIntroShown &&
+        typeof UI !== "undefined" &&
+        UI &&
+        typeof UI.showDialog === "function"
+      ) {
+        currentLevel.laserOffIntroShown = true;
+
+        if (typeof UI.hideDialog === "function") {
+          UI.hideDialog();
+        }
+
+        UI.showDialog("stage3_laser_off", "tutorial_hint");
+
+        setTimeout(function () {
+          if (
+            typeof UI !== "undefined" &&
+            UI &&
+            typeof UI.hideDialog === "function"
+          ) {
+            UI.hideDialog();
+          }
+        }, 2500);
+      }
     }
 
     break;
