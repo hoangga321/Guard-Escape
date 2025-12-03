@@ -280,18 +280,23 @@ Stealth.update = function (guards, player, level, dt) {
 
         var tx = tp.x + tp.width * 0.5;
         var ty = tp.y + tp.height * 0.5;
-        var radius = tp.visionRadius || (TILE_SIZE * 6);
+        var radius =
+          (typeof tp.visionRadius === "number" && tp.visionRadius > 0)
+            ? tp.visionRadius
+            : (typeof tp.detectionRadius === "number" && tp.detectionRadius > 0)
+              ? tp.detectionRadius
+              : (TILE_SIZE * 6);
         var dxTurret = player.x - tx;
         var dyTurret = player.y - ty;
         var distSqTurret = dxTurret * dxTurret + dyTurret * dyTurret;
-        if (distSqTurret <= radius * radius) {
-          var hasLos = true;
-          if (typeof this.hasLineOfSight === "function") {
-            hasLos = this.hasLineOfSight({ x: tx, y: ty }, player, level);
-          }
-          if (hasLos) {
-            visible = true;
-          }
+        if (distSqTurret > radius * radius) continue;
+
+        var hasLos = true;
+        if (typeof this.hasLineOfSight === "function") {
+          hasLos = this.hasLineOfSight({ x: tx, y: ty }, player, level);
+        }
+        if (hasLos) {
+          visible = true;
         }
       }
     }

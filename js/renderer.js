@@ -693,7 +693,12 @@ Renderer.renderGame = function (level, player, guards) {
 
         var tx = tprop.x + tprop.width * 0.5;
         var ty = tprop.y + tprop.height * 0.5;
-        var trad = tprop.visionRadius || (TILE_SIZE * 6);
+        var trad =
+          (typeof tprop.visionRadius === "number" && tprop.visionRadius > 0)
+            ? tprop.visionRadius
+            : (typeof tprop.detectionRadius === "number" && tprop.detectionRadius > 0)
+              ? tprop.detectionRadius
+              : (TILE_SIZE * 6);
 
         ctx.save();
         ctx.beginPath();

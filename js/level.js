@@ -189,14 +189,19 @@ function createTestLevel() {
   // ----- Cửa (door) nối phòng với hành lang -----
   // Room A cửa sang hành lang
   tiles[5][10] = 0;
+  tiles[6][10] = 0; // widen to 2 tiles
   // Room B
   tiles[15][10] = 0;
+  tiles[16][10] = 0;
   // Room C
   tiles[5][14] = 0;
+  tiles[6][14] = 0;
   // Room D
   tiles[15][14] = 0;
+  tiles[16][14] = 0;
   // Lab: cửa bên trái
   tiles[10][26] = 0;
+  tiles[11][26] = 0;
 
   // ----- Vị trí spawn của player (phòng A) -----
   var playerSpawn = {
@@ -553,6 +558,7 @@ function createStage3Level() {
   // Keep a 1-tile gap at (coreX1, entranceY).
   var entranceY = 19;
   tiles[entranceY][coreX1] = 0;
+  tiles[entranceY - 1][coreX1] = 0; // make the entrance 2 tiles high
 
   // Make sure there is a corridor leading to this door from the left:
   // clear a vertical line of floor tiles through the belts at x = coreX1 - 2.

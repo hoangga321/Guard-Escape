@@ -1350,6 +1350,19 @@ function startStage2Intro() {
 }
 
 window.addEventListener("load", function () {
+  // Simple progression gate: Stage 2 requires Stage 1 cleared
+  var stage1Cleared = false;
+  try {
+    stage1Cleared = localStorage.getItem("stage1_cleared") === "true";
+  } catch (e) {}
+  if (!stage1Cleared) {
+    try {
+      alert("Clear Stage 1 to unlock Stage 2.");
+    } catch (e) {}
+    window.location.href = "index.html";
+    return;
+  }
+
   gameCanvas = document.getElementById("game-canvas");
   if (!gameCanvas) {
     console.error("game-canvas not found");

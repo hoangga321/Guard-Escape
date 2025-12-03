@@ -125,6 +125,9 @@ var hasShownIntro = false;
 // Stealth debug disabled in release build
 var DEBUG_STEALTH = false;
 
+// Stage 3 laser-off intro dialog flag
+var hasShownStage3LaserOffIntro = false;
+
 // ===== Key state riêng cho main (dùng cho phím E) =====
 var keyState = {};
 window.addEventListener("keydown", function (e) {
@@ -471,6 +474,8 @@ function restartLevel() {
     currentLevel.playerSpawn.y
   );
 
+  hasShownStage3LaserOffIntro = false;
+
   // ===== Stage 2 meta flags =====
   // Mark this as Stage 3 and use circular guard vision instead of cone.
   currentLevel.stageId = 3;
@@ -731,6 +736,38 @@ function restartLevel() {
           vr = TILE_SIZE;
         }
         tp.visionRadius = vr;
+        if (typeof tp.fovAngle !== "number") {
+          tp.fovAngle = Math.PI / 3; // ~60° cone
+        }
+
+        // Default facing: toward a specified look-at point or the objective center.
+        var cx = tp.x + tp.width * 0.5;
+        var cy = tp.y + tp.height * 0.5;
+        var dirX = tp.dirX;
+        var dirY = tp.dirY;
+        if (typeof dirX !== "number" || typeof dirY !== "number") {
+          var lookAtX = (typeof tp.lookAtX === "number") ? tp.lookAtX : null;
+          var lookAtY = (typeof tp.lookAtY === "number") ? tp.lookAtY : null;
+          if (lookAtX === null || lookAtY === null) {
+            if (currentLevel && currentLevel.objective) {
+              lookAtX = currentLevel.objective.x + currentLevel.objective.width * 0.5;
+              lookAtY = currentLevel.objective.y + currentLevel.objective.height * 0.5;
+            } else {
+              lookAtX = cx + TILE_SIZE;
+              lookAtY = cy;
+            }
+          }
+          dirX = lookAtX - cx;
+          dirY = lookAtY - cy;
+        }
+        var dlen = Math.sqrt(dirX * dirX + dirY * dirY);
+        if (dlen === 0) {
+          dirX = 1;
+          dirY = 0;
+          dlen = 1;
+        }
+        tp.dirX = dirX / dlen;
+        tp.dirY = dirY / dlen;
       }
     }
 
@@ -818,35 +855,7 @@ function restartLevel() {
   // ===== Stage 2 wall cameras =====
   // These are used both for rendering and for stealth detection.
   // They are mounted near the top walls and look downwards into the map.
-  currentLevel.cameras = [
-    {
-      // Camera A – top wall, above center of Zone B, below HUD
-      x: TILE_SIZE * 4,
-      y: TILE_SIZE * 8,
-      radius: TILE_SIZE * 5,
-      dirX: 0,
-      dirY: 1,
-      fovAngle: Math.PI
-    },
-    {
-      // Camera B – central divider (looking left into corridor)
-      x: TILE_SIZE * 30,
-      y: TILE_SIZE * 8,
-      radius: TILE_SIZE * 5,
-      dirX: -1,
-      dirY: 0,
-      fovAngle: Math.PI
-    },
-    {
-      // Camera C – right-side wall watching the exit corridor
-      x: TILE_SIZE * 63,
-      y: TILE_SIZE * 11,
-      radius: TILE_SIZE * 5,
-      dirX: -1,
-      dirY: 0,
-      fovAngle: Math.PI
-    }
-  ];
+  currentLevel.cameras = [];
   if (Array.isArray(currentLevel.cameras)) {
     currentLevel.cameras.forEach(function (cam) {
       if (typeof cam.active === "undefined") {
@@ -932,6 +941,27 @@ function restartLevel() {
     { x: TILE_SIZE * 60, y: TILE_SIZE * 38 }
   ];
   guards.push(new Guard(gC3Route[0].x, gC3Route[0].y, gC3Route));
+
+  var gC4Route = [
+      { x: TILE_SIZE * 25, y: TILE_SIZE * 10 },
+    { x: TILE_SIZE * 39, y: TILE_SIZE * 10 },
+    { x: TILE_SIZE * 25, y: TILE_SIZE * 10 }
+  ];
+  guards.push(new Guard(gC4Route[0].x, gC4Route[0].y, gC4Route));
+
+  var gC5Route = [
+      { x: TILE_SIZE * 61, y: TILE_SIZE * 10 },
+    { x: TILE_SIZE * 45, y: TILE_SIZE * 10 },
+    { x: TILE_SIZE * 61, y: TILE_SIZE * 10 }
+  ];
+  guards.push(new Guard(gC5Route[0].x, gC5Route[0].y, gC5Route));
+
+   var gC6Route = [
+      { x: TILE_SIZE * 62, y: TILE_SIZE * 2 },
+    { x: TILE_SIZE * 62, y: TILE_SIZE * 20 },
+    { x: TILE_SIZE * 62, y: TILE_SIZE * 2 }
+  ];
+  guards.push(new Guard(gC6Route[0].x, gC6Route[0].y, gC6Route));
 
   // === Mutant guard in console room (Stage 3) ===
   // NOTE: keep this inside the Stage 3 setup function, after other guards are created.
@@ -1061,6 +1091,46 @@ function computeTrapGroupCenter(level, groupIds) {
   };
 }
 
+function showStage3LaserOffIntroOnce() {
+  if (hasShownStage3LaserOffIntro) return;
+  hasShownStage3LaserOffIntro = true;
+
+  // Kick off the cinematic if lasers are still enabled and no cinematic is running.
+  if (
+    currentLevel &&
+    currentLevel.stageId === 3 &&
+    currentLevel.laserEnabled !== false &&
+    !laserCinematic.active
+  ) {
+    laserCinematic.active = true;
+    laserCinematic.timer = 0;
+    currentLevel.laserEnabled = true;
+    currentLevel.laserAlpha = 1;
+  }
+
+  if (typeof AudioManager !== "undefined" && AudioManager && typeof AudioManager.playSfx === "function") {
+    AudioManager.playSfx("laser_off");
+  }
+
+  if (typeof UI !== "undefined" && UI && typeof UI.showDialog === "function") {
+    if (typeof UI.hideDialog === "function") {
+      UI.hideDialog();
+    }
+
+    setTimeout(function () {
+      if (typeof UI !== "undefined" && UI && typeof UI.showDialog === "function") {
+        UI.showDialog("stage3_laser_off", "tutorial_hint");
+      }
+    }, 800);
+
+    setTimeout(function () {
+      if (typeof UI !== "undefined" && UI && typeof UI.hideDialog === "function") {
+        UI.hideDialog();
+      }
+    }, 2500);
+  }
+}
+
 function updateStage3LaserSwitches(dt, justPressedE) {
   if (!currentLevel || currentLevel.stageId !== 3) return;
   if (!player) return;
@@ -1133,42 +1203,12 @@ function updateStage3LaserSwitches(dt, justPressedE) {
     }
   }
 
-  if (typeof AudioManager !== "undefined" && AudioManager && typeof AudioManager.playSfx === "function") {
+  if (hoveredSwitch.id !== "switchC" && typeof AudioManager !== "undefined" && AudioManager && typeof AudioManager.playSfx === "function") {
     AudioManager.playSfx("laser_off");
   }
 
   if (hoveredSwitch.id === "switchC") {
-    if (!laserCinematic.active) {
-      laserCinematic.active = true;
-      laserCinematic.timer = 0;
-      currentLevel.laserEnabled = true;
-      currentLevel.laserAlpha = 1;
-
-      // Show intro-style message when the special Stage 3 switch disables the exit lasers
-      if (
-        typeof UI !== "undefined" &&
-        UI &&
-        typeof UI.showDialog === "function"
-      ) {
-        // Optionally hide any previous dialog
-        if (typeof UI.hideDialog === "function") {
-          UI.hideDialog();
-        }
-
-        UI.showDialog("stage3_laser_off", "tutorial_hint");
-
-        // Auto-hide after 2.5 seconds
-        setTimeout(function () {
-          if (
-            typeof UI !== "undefined" &&
-            UI &&
-            typeof UI.hideDialog === "function"
-          ) {
-            UI.hideDialog();
-          }
-        }, 2500);
-      }
-    }
+    showStage3LaserOffIntroOnce();
   }
 }
 
@@ -1209,6 +1249,20 @@ function updateStage3TrapSwitches(dt, justPressedE) {
 
     if (!groups.length) continue;
 
+    var affectsGroupC = false;
+    for (var gi = 0; gi < groups.length; gi++) {
+      if (groups[gi] === "C") {
+        affectsGroupC = true;
+        break;
+      }
+    }
+    var wasGroupCActive =
+      affectsGroupC &&
+      currentLevel &&
+      currentLevel.laserGroups &&
+      currentLevel.laserGroups.C &&
+      currentLevel.laserGroups.C.active;
+
     if (c.used) {
       continue;
     }
@@ -1224,35 +1278,12 @@ function updateStage3TrapSwitches(dt, justPressedE) {
       laserCinematic.active = false;
     }
 
-    if (typeof AudioManager !== "undefined" && AudioManager && typeof AudioManager.playSfx === "function") {
+    if (c.id !== "exit" && typeof AudioManager !== "undefined" && AudioManager && typeof AudioManager.playSfx === "function") {
       AudioManager.playSfx("laser_off");
     }
 
-    if (c.id === "exit") {
-      if (
-        !currentLevel.laserOffIntroShown &&
-        typeof UI !== "undefined" &&
-        UI &&
-        typeof UI.showDialog === "function"
-      ) {
-        currentLevel.laserOffIntroShown = true;
-
-        if (typeof UI.hideDialog === "function") {
-          UI.hideDialog();
-        }
-
-        UI.showDialog("stage3_laser_off", "tutorial_hint");
-
-        setTimeout(function () {
-          if (
-            typeof UI !== "undefined" &&
-            UI &&
-            typeof UI.hideDialog === "function"
-          ) {
-            UI.hideDialog();
-          }
-        }, 2500);
-      }
+    if (c.id === "exit" && wasGroupCActive) {
+      showStage3LaserOffIntroOnce();
     }
 
     break;
@@ -1266,7 +1297,7 @@ function updateStage3Traps(dt) {
 
   function turretHasLineOfSight(level, tx, ty, px, py) {
     if (!level || typeof level.isBlocked !== "function") return true;
-    var steps = 20;
+    var steps = 40;
     var dx = px - tx;
     var dy = py - ty;
     for (var s = 1; s <= steps; s++) {
@@ -1320,39 +1351,43 @@ function updateStage3Traps(dt) {
       var dx = px - tx;
       var dy = py - ty;
       var distSq = dx * dx + dy * dy;
-      var detectRadius = (typeof p.detectionRadius === "number") ? p.detectionRadius : TILE_SIZE * 6;
+      var detectRadius =
+        (typeof p.visionRadius === "number" && p.visionRadius > 0) ? p.visionRadius :
+        (typeof p.detectionRadius === "number" && p.detectionRadius > 0) ? p.detectionRadius :
+        TILE_SIZE * 6;
       var detectSq = detectRadius * detectRadius;
+      if (distSq > detectSq) continue;
+
       var len = Math.sqrt(distSq);
-      var nx = len > 0 ? dx / len : 0;
-      var ny = len > 0 ? dy / len : 0;
+      if (len === 0) len = 0.0001;
+      var nx = dx / len;
+      var ny = dy / len;
 
       p.aimDirX = nx;
       p.aimDirY = ny;
 
-      if (distSq <= detectSq) {
-        var hasLosTurret = turretHasLineOfSight(currentLevel, tx, ty, px, py);
-        if (!hasLosTurret) continue;
-        if (typeof p.fireCooldown !== "number") {
-          p.fireCooldown = 0;
-        }
-        p.fireCooldown -= dt;
-        if (p.fireCooldown <= 0) {
-          var speed = (typeof p.bulletSpeed === "number") ? p.bulletSpeed : 400;
-          var interval = (typeof p.fireInterval === "number") ? p.fireInterval : 0.8;
-          var radius = (typeof p.bulletRadius === "number") ? p.bulletRadius : 6;
+      var hasLosTurret = turretHasLineOfSight(currentLevel, tx, ty, px, py);
+      if (!hasLosTurret) continue;
+      if (typeof p.fireCooldown !== "number") {
+        p.fireCooldown = 0;
+      }
+      p.fireCooldown -= dt;
+      if (p.fireCooldown <= 0) {
+        var speed = (typeof p.bulletSpeed === "number") ? p.bulletSpeed : 400;
+        var interval = (typeof p.fireInterval === "number") ? p.fireInterval : 0.8;
+        var radius = (typeof p.bulletRadius === "number") ? p.bulletRadius : 6;
 
-          currentLevel.turretBullets.push({
-            x: tx,
-            y: ty,
-            vx: nx * speed,
-            vy: ny * speed,
-            speed: speed,
-            radius: radius,
-            alive: true
-          });
+        currentLevel.turretBullets.push({
+          x: tx,
+          y: ty,
+          vx: nx * speed,
+          vy: ny * speed,
+          speed: speed,
+          radius: radius,
+          alive: true
+        });
 
-          p.fireCooldown = interval;
-        }
+        p.fireCooldown = interval;
       }
     }
   }
@@ -2113,6 +2148,19 @@ function startStage3Intro() {
 }
 
 window.addEventListener("load", function () {
+  // Simple progression gate: Stage 3 requires Stage 2 cleared
+  var stage2Cleared = false;
+  try {
+    stage2Cleared = localStorage.getItem("stage2_cleared") === "true";
+  } catch (e) {}
+  if (!stage2Cleared) {
+    try {
+      alert("Clear Stage 2 to unlock Stage 3.");
+    } catch (e) {}
+    window.location.href = "index.html";
+    return;
+  }
+
   gameCanvas = document.getElementById("game-canvas");
   if (!gameCanvas) {
     console.error("game-canvas not found");
