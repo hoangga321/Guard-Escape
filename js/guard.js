@@ -339,6 +339,27 @@ Guard.prototype.update = function (dt, level) {
   var moveDy = this.y - oldY;
   var moveDist = Math.sqrt(moveDx * moveDx + moveDy * moveDy);
 
+  // Close-contact capture during chase to avoid overlapping without detection
+  if (
+    typeof player !== "undefined" && player &&
+    this.state === "CHASE" &&
+    (typeof gameStatus === "undefined" || gameStatus === "playing")
+  ) {
+    var cdx = player.x - this.x;
+    var cdy = player.y - this.y;
+    var captureRadius = (typeof TILE_SIZE === "number" && TILE_SIZE > 0)
+      ? TILE_SIZE * 0.35
+      : Math.min(this.width, this.height) * 0.5;
+    var contactDist = Math.sqrt(cdx * cdx + cdy * cdy);
+
+    if (contactDist <= captureRadius && typeof Stealth !== "undefined" && Stealth) {
+      Stealth.isDetected = true;
+      if (typeof Stealth.alertLevel !== "undefined") {
+        Stealth.alertLevel = 1;
+      }
+    }
+  }
+
   this._setAnimState(moveDist > 0.01 ? "walk" : "idle", dt);
 
   // === Footstep SFX ===
